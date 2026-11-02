@@ -1,6 +1,6 @@
 # GitHub Pages 배포 스크립트 (gh CLI 로그인 후 실행: .\deploy.ps1)
 # 1) 공개 저장소 생성  2) 푸시  3) Pages 활성화(main 브랜치 루트)  4) 주소 출력
-param([string]$Repo = "moneyeo-hongkong")
+param([string]$Repo = "palgoe-osaka")
 $ErrorActionPreference = "Stop"
 gh auth status | Out-Null
 $user = gh api user --jq .login

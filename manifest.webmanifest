@@ -1,7 +1,7 @@
 {
-  "name": "토끼의 여정",
-  "short_name": "토끼의 여정",
-  "description": "휴대폰 우선 여행 일정 · 홍콩·마카오",
+  "name": "팔괴 여정",
+  "short_name": "팔괴 여정",
+  "description": "휴대폰 우선 여행 일정 · 오사카",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",

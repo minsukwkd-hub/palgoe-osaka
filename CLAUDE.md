@@ -1,59 +1,34 @@
-# 토끼의 여정 (travel-maker)
+# 팔괴 여정 (travel-maker VER 2 · 오사카)
 
-휴대폰 우선 여행 일정 페이지. 지인 1명과 그 일행이 쓰는 개인 서비스이며, 기능이 완성될 때까지 사용자 범위를 넓히지 않는다. 서비스 이름은 **"토끼의 여정"** 으로 고정(제목·앱명·공유 미리보기 모두).
+휴대폰 우선 여행 일정 페이지. "토끼의 여정" VER 1(홍콩 편, 저장소 `minsukwkd-hub/moneyeo-hongkong`, 태그 `v1-hongkong`)을 2026-11-02에 복제해 만든 **VER 2**. 사용자 일행은 어른 5·아이 2, 총 7명("팔괴"). 서비스 이름은 **"팔괴 여정"** (제목·앱명·공유 미리보기). 도우미는 여전히 "토끼", 물어보기 버튼 기본 호칭은 **"시우·재이"**(`askName()`).
 
-## 현재 산출물
-- `index.html` — 단일 파일 앱(모녀 홍콩·마카오 3박4일). CSS 토큰 → 인라인 Leaflet CSS → 페이지 CSS → 본문 → 시트(SUZI·장소 넣기·장소 정보) → `<script>`.
-- 배포: GitHub Pages https://minsukwkd-hub.github.io/moneyeo-hongkong/ (이 저장소 `main` 루트, push 후 1~2분 자동 반영).
-- `suzi-proxy/` — Cloudflare Worker: 토끼 프록시(API 키 보관, Origin·IP당 30회/분) + 공유 서버(`POST /share`·`GET /s/<code>` KV 90일, `PUT|GET /p/<code>/<id>` R2 사진) + `GET /flights`(홍콩공항 운항 정보 중계, 5분 캐시). `wrangler.toml` 포함. `npx wrangler deploy`. KV `SHARE`(코드 90일)·R2 `tokki-photos`(수명주기 90일) 바인딩 운영 중.
-- `suzi-proxy-vercel/` — 같은 프록시의 Vercel Edge Function 버전(대안).
-- `deploy.ps1` — GitHub Pages 최초 배포 스크립트(이미 배포됨, 참고용).
-- `manifest.webmanifest`, `icons/` — 홈 화면 앱(PWA) 설정과 아이콘. 설치 안내 띠는 `paintInstall()`.
-- `data/places-hk.json`, `tools/build_places.py` — 장소 사전과 생성기.
+## 확정된 여행 정보 (2026-11-02 사용자 제공)
+- 여행지 오사카(KIX) · 2026-12-18(금) ~ 12-21(월) 3박 4일
+- 항공편 이스타항공 ZE615 ICN 09:55 → KIX 11:55 (T1) / ZE614 KIX 18:00 → ICN 19:50 (T1). 12월 시각은 예약 확인서가 최종.
+- 숙소 칸데오 호텔 오사카 난바 (東心斎橋 2-2-5, 34.6707/135.5057, 체크인 15:00·아웃 11:00, 최상층 스카이스파)
+- 기록 방식: 각자 기기에 기록(VER 1과 같음). 여러 명이 한 여정에 함께 기록하는 동기화(M5)는 미정.
 
-## index.html 구조 (수정 시 참고)
-- 일정 데이터: `PLAN_A`(현재 여정) `PLAN_B`(조금 다른) `PLAN_C`(다른) `PLAN_U`(당신의 여정 = 직접 꾸미기 뼈대) → `PLANS` 배열. 저장: localStorage `suzi-hk-plan-v2:<id>`, 선택 여정 `suzi-hk-variant`.
-- 장소 사전: `CATALOG`(세 여정 + `EXTRA`에서 q 기준 중복 제거, `areaOf`로 지역 분류). 운영 정보: `INFO` (키 = 구글지도 검색어 q; `hours, fee, tip, site, siteName, src, upd, conf`). 기준일 `INFO_ASOF`. 사용자/SUZI 수정 오버레이 `INFO_EDIT` → `suzi-hk-info-v1`.
-- 렌더: `render()` 하나가 상단 상태·여정 선택 버튼·탭·Day 섹션·전체 지도를 모두 다시 그린다. 지도는 Leaflet(CDN 1.9.4) + OpenStreetMap 표준 타일(키 없음) + 내장 해안선 `LANDGEO`(타일을 못 받으면 해안선만) — 좌표는 홍콩·마카오 범위만 의미 있음. 하루 동선 점선, 겹침 핀 비켜 그리기, "◎ 내 위치" 버튼. CARTO 무료 타일은 키 없이는 워터마크라 쓰지 않는다.
-- 여행 정보 시트: 항공편은 편명→항공사 풀이 + Worker `GET /flights`(홍콩공항 공개 운항 정보, 과거 90일~14일 앞)로 시각·터미널 저장(`flights.in/out.sched…`), 숙소는 장소 사전 호텔 501곳·지도 찾기에서 골라 실제 좌표(`lodging.exact`) 저장.
-- 시트: SUZI(`#sheet`), 장소 넣기(`#addsheet`, 직접 꾸미기에서만, 직접 입력 폼 + 장소 사전 `data/places-hk.json`(OSM+Wikidata 13,400곳, 한국어 표기 6,800곳 중 대부분 AI 추정 `kosrc:ai`; 생성기 `tools/build_places.py`, 캐시 `tools/places_raw/`는 git 제외) + "지도에서 찾기"=Nominatim 직접 호출(홍콩/마카오 범위·버튼식) + 한국어로 못 찾으면 토끼(haiku, effort low)가 영문명으로 바꿔 재검색), 장소 정보(`#infosheet`, 제목 클릭), 여행 정보(`#tripsheet`, 상태 타일 클릭), 챙김 메모(`#bridgesheet`).
-- SUZI 연결 어댑터(`connect()`): ① claude.ai 아티팩트 `window.claude` sample → ② 외부 서버(`CONN.url`, Bearer 토큰) → ③ API 키 직접(테스트용). 설정은 ⚙, localStorage `suzi-hk-conn-v1`. 공유용 기본값은 `SUZI_DEFAULT` 상수.
-- SUZI 직접 호출(`apiChat`): Messages API 스트리밍(SSE) + 수동 tool loop. 모델 기본 `claude-opus-5-5`, `output_config.effort:"high"`, `fallbacks:"default"`(beta 헤더 `server-side-fallback-2026-07-01`). thinking 블록은 서명 포함 그대로 되돌려 보낸다.
-- SUZI 도구: add_stop / remove_stop / update_stop(stop_id 우선, dur) / reorder_stops / add_bridge / remove_bridge / mark_visited / add_expense / set_journal / swap_days / choose_plan / import_template / update_info / set_trip_info(날짜·숙소·동행). 변경 도구는 U에서만.
-- 파일이 크다(≈280KB, LANDGEO 때문). 편집은 정확한 문자열 치환으로 하고, 끝나면 `<script>` 본문을 `new Function`으로 문법 검사한다.
+## VER 1과 다른 점 (코드)
+- **저장 키 전부 `palgoe-` 접두사** (`palgoe-trips-v1`, `palgoe-trip:<id>`, `palgoe-settings-v1`, `palgoe-chat-v1`, `palgoe-places-v1`, `palgoe-info-v1`, `palgoe-conn-v1`, `palgoe-variant`), IndexedDB `palgoe`. 이유: 두 저장소가 같은 `minsukwkd-hub.github.io` origin이라 localStorage를 공유한다. 내보내기 파일의 `kind:"tokki-trip"`은 호환을 위해 그대로.
+- 지역: `AREAS` 9개(난바·도톤보리 / 우메다·키타 / 오사카성 / 텐노지·신세카이 / 베이에어리어·USJ / 교토 / 나라 / 고베 / 간사이공항), `areaOf`는 시내 5개 중심점과의 최근접 + 교토(lat>34.85)·나라(lng>135.75)·고베(lng<135.30)·공항(lat<34.50). `regionOf`(오사카/교토/나라/고베/간사이공항)·`farOf`(당일치기 지역)·`farDay(d)`가 옛 `isMacauPt`/`d.macau` 역할. `inHK`는 이름만 남고 범위는 간사이(34.1~35.3, 134.8~136.2).
+- 이동시간: 지역이 다르면 `TRAIN_MIN` 표(오사카↔교토 60·나라 50·고베 40·공항 55분 등)로 "전철 약 N분". 페리 모드 없음.
+- 통화 `CURS=["JPY","KRW"]`, 기본 JPY. 숙소 지역 `LODGE_AREAS` 7개(난바·신사이바시·우메다·혼마치·텐노지·교토·고베), 기본 난바. 동행 기본값 "가족", `trip.party.note`("어른 5 · 아이 2") 보존.
+- 지도: `LANDGEO.kansai`(OSM 해안선, 11개 폴리곤, 89KB, `asia`는 VER 1 그대로), 기본 시점 난바, 전체 지도 fit은 당일치기 지역에 따라 확장, 공항→난바 라피트 동선, 지명 라벨 `PLACES` 간사이.
+- 항공편: 간사이공항은 키 없는 공개 운항 정보 API가 없다(서버 렌더링 HTML, 비브라우저 403). `FLIGHT_API=false`로 "불러오기" 버튼을 숨기고 **공항 운항 현황 페이지 딥링크**(당일)만 표시. Worker `/flights`는 홍콩공항 전용이라 VER 2에서는 쓰지 않는다. 스카이스캐너 링크는 icn/kix.
+- 장소 사전 `data/places-kansai.json`(형식 v2 `[ko,en,ja,lat,lng,kind,pop,cuisine,kosrc]`, 3번째 칸이 일본어), 생성기 `tools/build_places.py`(간사이 5개 bbox). 검색 보조어 `KO_SYN`·동네 `AREA_PTS`·종류 `KIND_WORDS` 간사이판. Nominatim viewbox 134.85,34.15~136.10,35.25, 구글지도 검색어 접미사는 `regionEn()`(Osaka/Kyoto/Nara/Kobe).
+- 아이콘: `icons/icon.svg`(소 + 토끼), PNG는 Chrome headless 렌더 + PIL. 헤더에도 `#cow` 심볼이 토끼 옆에 보인다(`.hero .cow`).
+- 추천 여정 A/B/C·운영 정보 `INFO`·`EXTRA`·`HOTEL`은 오사카판으로 교체(`INFO_ASOF` 참고). `PLAN_U`는 날짜·항공편·숙소가 채워진 뼈대.
+
+## 산출물·운영 (VER 1과 같음)
+- `index.html` 단일 파일 앱. 배포: GitHub Pages https://minsukwkd-hub.github.io/palgoe-osaka/ (이 저장소 `main` 루트).
+- `suzi-proxy/` Cloudflare Worker는 **VER 1과 공용**(https://suzi-proxy.suzi-proxy.workers.dev/, 도쿄 고정, `ALLOWED_ORIGIN`은 origin 단위라 추가 설정 불필요). 공유 코드 KV·사진 R2도 공용. Worker 코드를 고칠 때는 VER 1 저장소에서 고치고 배포한 뒤 이쪽에 복사한다.
+- 설계 문서 `docs/설계.md`는 VER 1의 것을 그대로 가져왔다(데이터 모델·공유 포맷은 동일). 작업 기록은 `docs/작업기록.md`(VER 2부터 새로 시작).
+- 파일이 크다(≈400KB). 편집은 정확한 문자열 치환으로 하고, 끝나면 `<script>` 본문을 `new Function`으로 문법 검사한다.
 
 ## 작업 규칙
-- UI/UX 뼈대(색·폰트·레이아웃·시트 방식)는 사용자가 확정함. 기능은 더하되 모양을 바꾸지 않는다.
-- 이 폴더는 독립 git 저장소(GitHub `minsukwkd-hub/moneyeo-hongkong`, 공개). 회사 GitLab·다른 저장소는 절대 건드리지 않는다.
+- UI/UX 뼈대(색·폰트·레이아웃·시트 방식)는 VER 1에서 확정됨. 기능은 더하되 모양을 바꾸지 않는다.
+- 이 폴더는 독립 git 저장소(GitHub `minsukwkd-hub/palgoe-osaka`, 공개). 회사 GitLab·다른 저장소는 절대 건드리지 않는다. VER 1 저장소(`C:\ClaudeTokki`)는 보존용이라 기능 변경 금지.
 - 공개 저장소이므로 API 키·이메일·계정 ID를 커밋하지 않는다. 비밀은 Worker Secret에만.
 - 운영 정보(`INFO`)는 웹 검증 날짜를 `INFO_ASOF`로 표시한다. 값이 바뀌면 `src`·`upd`·`conf`도 함께 갱신.
 - 커밋 메시지 끝에 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
-- 로컬 확인: `python -m http.server 8765 --directory .` 후 http://localhost:8765/index.html (file:// 로 열면 fetch·일부 기능 제한).
-
-## 보존 상태 (2026-11-02 · VER 1 봉인)
-- 홍콩 편 여행이 실제로 끝났고 좋은 피드백을 받았다. **이 저장소는 VER 1(홍콩)의 추억·기능·설정을 그대로 보존하는 곳**이다. 태그 `v1-hongkong`.
-- 새 여행지·새 사용자용 VER 2는 별도 저장소·별도 주소에서 진행한다. 이 저장소에서는 기능 변경을 하지 않고, 꼭 필요한 수정(배포 깨짐·보안)만 한다.
-- Worker(`suzi-proxy`)는 VER 1·VER 2가 공유한다. VER 2 주소를 `ALLOWED_ORIGIN`에 추가할 때 VER 1 주소를 빼지 않는다.
-
-## 진행 상태 (2026-10-16 마감 · 작업기록 45번까지)
-- SUZI 프록시: **Cloudflare Worker 운영 중, 종단 검증 완료** https://suzi-proxy.suzi-proxy.workers.dev/ (계정 이메일 minsukwkd+cf@gmail.com). 시크릿은 `ANTHROPIC_API_KEY` 하나. **서버 토큰은 쓰지 않기로 결정**(Origin 제한·IP당 30회/분·월 한도로 방어). **실행 위치는 도쿄 고정(`[placement] region`)** — Anthropic이 홍콩(HKG) 발신을 403으로 막기 때문. 이 설정을 지우면 홍콩 현지에서 SUZI가 죽는다. Vercel 배포본(https://suzi-proxy.vercel.app/api/suzi, hnd1 고정)은 예비.
-- `SUZI_DEFAULT.url`은 Cloudflare 주소, `token`은 빈 값이 정상. 저장된 연결 설정은 사용자가 직접 바꾼 경우(`custom:true`)가 아니면 항상 `SUZI_DEFAULT`를 따른다.
-- 설계: `docs/설계.md`(v3, 개정 2)가 장기 구조·데이터 모델·착수 순서(M0~M4)의 기준. **M0·M1·M2 완료**(이름/토끼 호칭/인앱 띠 · 모델 v3+repo+SUZI id 도구 · 내보내기/불러오기 · 여행 정보 시트 · ▲▼ 순서/이동시간/부하 경고 · 직접 장소/챙김 메모). **M3 완료**(사진·공유 링크·기록·여행 목록 홈). **M4 완료**: 짧은 공유 코드 `#c=<code>`(Worker KV, 90일) + 사진 포함 공유(R2, 코드당 최대 30장, 90일). 서버 실패 시 `#s=` 긴 링크로 복귀. 공유 시트는 사용자 탭 안에서만 열려 "링크 만들기 → 보내기" 두 단계.
-- 여행 목록: `tokki-trips-v1` `{cur,ids}`; `U`는 현재 내 여행 포인터(`realTripId`), 저장 키 `tokki-trip:<id>`, 사진 tripId도 실제 id. 불러오기·복사는 `placeIntoMine`(빈 여행이면 그 자리, 아니면 새 여행). 시트 `#listsheet`, 도구 list_trips/open_trip/new_trip. **추천 여정(A/B/C)은 보기 전용**(2026-10-16 결정): 항상 원본 로드·저장 없음·기록/사진/편집 UI 없음, SUZI 변경 도구는 `EDIT_TOOLS` 래퍼로 거절, 복사는 `import_template` 또는 "바탕으로 직접 꾸미기".
-- 기록(M3b): `Stop.status|memo|cost{amount,cur}`, `Day.expenses[]`, `Day.journal{text,mood}`. 통화 HKD·MOP·KRW, 합계는 통화별(`spendOf`). 시트 `#recsheet`(장소 기록)·`#exsheet`(Day 지출)·`#journalsheet`(일기). 받은 여정(S)에서는 기록 불가. 공유 링크엔 안 실리고 내보내기엔 실린다. SUZI 도구 mark_visited / add_expense / set_journal.
-- 공유 링크(M3a): `toSlim`/`fromSlim`(슬림 포맷 v1) → deflate-raw → base64url → `#s=`(압축 불가 브라우저는 `#j=`). 받는 쪽은 부팅 때 해시를 풀어 "받은 여정"(variant `S`, `SHARED.meta`, 저장 안 함)으로 보여 주고 "내 여정으로 가져오기"로 `applyImport`. 1,800자 초과면 파일 내보내기로 전환. 주의: 스크립트 안 `history`는 되돌리기 스택이므로 브라우저 히스토리는 반드시 `window.history`로 부른다.
-- 저장 키: 여행 `tokki-trip:<U|t…>`(목록 `tokki-trips-v1`, 템플릿 A/B/C는 저장 안 함, 옛 `suzi-hk-plan-v2:*`는 백업으로 남김), 설정 `tokki-settings-v1`, 대화 `tokki-chat-v1`, 정보 오버레이 `suzi-hk-info-v1`, 사용자 장소 `tokki-places-v1`, 사진·영상 IndexedDB `tokki/media`(기기 전용).
-- 물어보기 버튼·시트 제목은 이름이 비어 있으면 "수지"로 부른다(`askName()`, 2026-10-16 결정). 헤더 각주·공유 이름은 실제 입력값만.
-- 설정 저장소: localStorage `tokki-settings-v1` `{v, profile:{name}}`. 이후 conn·last 등도 여기로 모은다(설계 2.10).
-
-## 로드맵 (2026-10-14 사용자 확정)
-1. SUZI 연결 완료(프록시 배포 → 토큰·키 등록 → `SUZI_DEFAULT` → 실제 질문 검증). 물어보기 버튼은 여행자 이름을 따른다.
-2. "직접 꾸미기 + 여행 짜기"를 실제 운용 수준으로: 여행 기본정보(날짜·항공편·숙소) 입력, 일정 순서 변경, 소요·이동시간 계산, 하루 부하 경고, 목록에 없는 장소 추가, 내보내기·불러오기.
-3. 홍콩 전용을 넘어 사용자가 자신의 여정을 계속 기록하는 서비스로 확장(여행 목록 → 여행별 일정 → 장소 사전, 방문 체크·메모·지출·여행 일기).
-   - 트리플(Triple)식 공유: 내 여정을 링크로 외부 인원에게 보여 주고, 상대가 "내 여정으로 가져오기"로 복사해 편집. 서버 없이 링크에 여정을 압축해 담는 방식부터.
-   - 사진·첨부파일 기록: **우선 기기 안(IndexedDB)에만 저장**하고 내보내기 파일에 포함. 공유 링크에는 사진이 빠진다. 서버 저장소는 3단계에서 다시 결정.
-   - 여행자 이름 직접 입력: "SUZI의 여정" 같은 각주와 "SUZI에게 물어보기" 버튼에 반영. 토끼 도우미는 이름 없이 토끼로 남는다.
-   - 따뜻한 체크포인트: 장소와 장소 **사이에 브릿지 카드**로 한 줄 문구("비타민 챙겨먹기", "엄마 컨디션 확인하기")를 끼워 넣는다. 사용자가 직접 추가·수정.
-
-## 고정 사항
-- 서비스 이름 "토끼의 여정" 불변. UI 뼈대 불변, 기능만 추가.
+- 로컬 확인: `python -m http.server 8765 --directory .` 후 http://localhost:8765/index.html
