@@ -15,3 +15,4 @@ node_modules/
 # 장소 사전 생성 캐시(OSM·Wikidata 원본, 수 MB) — 재생성 가능
 tools/places_raw/
 tools/__pycache__/
+tools/places_raw_kansai/
