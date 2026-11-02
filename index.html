@@ -787,6 +787,7 @@ footer{padding-block:20px;font-size:12px;color:var(--muted);display:grid;gap:6px
 /* SUZI */
 .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:8px 16px 8px 8px;box-shadow:var(--shadow);cursor:pointer;font-weight:700;font-size:14px}
 .fab .face{width:36px;height:36px;border-radius:50%;background:var(--surface);display:grid;place-items:center}
+.fab .face+.face{margin-left:-14px}
 .fab .face svg{width:30px;height:30px}
 .fab:focus-visible{outline:3px solid var(--blush-ink);outline-offset:2px}
 .fab[hidden]{display:none!important}
@@ -828,6 +829,8 @@ footer{padding-block:20px;font-size:12px;color:var(--muted);display:grid;gap:6px
 .picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .pick{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 8px;display:grid;gap:1px;cursor:pointer;text-align:left;min-width:0}
 .pick .o{font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
+.pick .star{color:#e3a400}
+.pick.on .star{color:#ffd54a}
 .pick .n{font-size:14px;font-weight:700;overflow-wrap:anywhere}
 .pick.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .pick.on .o{color:rgba(255,255,255,.75)}
@@ -1048,7 +1051,7 @@ footer{padding-block:20px;font-size:12px;color:var(--muted);display:grid;gap:6px
 </div>
 
 <button class="fab" id="fab" type="button" aria-label="물어보기">
-  <span class="face"><svg style="color:#13231f" aria-hidden="true"><use href="#rabbit"/></svg></span>물어보기
+  <span class="face"><svg style="color:#13231f" aria-hidden="true"><use href="#cow"/></svg></span><span class="face"><svg style="color:#13231f" aria-hidden="true"><use href="#rabbit"/></svg></span>물어보기
 </button>
 
 <input type="file" id="mediaFile" accept="image/*,video/*" multiple hidden>
@@ -1230,7 +1233,7 @@ footer{padding-block:20px;font-size:12px;color:var(--muted);display:grid;gap:6px
 <script>
 const gm = q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const HOTEL = {n:"칸데오 호텔 오사카 난바", q:"Candeo Hotels Osaka Namba", lat:34.6707, lng:135.5057};
+const HOTEL = {n:"칸데오 호텔 오사카 난바 (カンデオホテルズ大阪なんば)", q:"Candeo Hotels Osaka Namba", lat:34.6707, lng:135.5057};
 const STORE = "palgoe-plan-v1";
 
 // 추천 여정·운영 정보: 오사카판(2026-11-02 작성). 항공편 ZE615 KIX 11:55 도착 → Day 1 12:30 공항 출발, ZE614 KIX 18:00 출발 → Day 4 14:30 난바 출발.
@@ -1372,7 +1375,7 @@ const PLAN_C = {
 
 const PLAN_U = {
  trip:{dates:{label:"2026.12.18 ~ 12.21 (3박 4일)",start:"2026-12-18",end:"2026-12-21"},flights:{in:{code:"ZE615",sched:"11:55",from:"ICN",terminal:"T1"},out:{code:"ZE614",sched:"18:00",to:"ICN",terminal:"T1"}},party:{type:"가족",note:"어른 5 · 아이 2"},
-  lodging:[{id:"lodge0",name:"칸데오 호텔 오사카 난바",area:"난바",q:HOTEL.q,lat:HOTEL.lat,lng:HOTEL.lng,exact:true}]},
+  lodging:[{id:"lodge0",name:"칸데오 호텔 오사카 난바 (カンデオホテルズ大阪なんば)",area:"난바",q:HOTEL.q,lat:HOTEL.lat,lng:HOTEL.lng,exact:true}]},
  days:[
  {title:"도착하는 날", items:[
   {t:"12:30",n:"간사이국제공항 도착",q:"Kansai International Airport",lat:34.4347,lng:135.2440,why:"입국 심사 뒤 1층 밖으로 나가면 바로 난카이 전철역이에요. 라피트로 난바까지 약 40분.",note:"일곱 명 라피트 좌석은 역 창구에서 한 번에 사면 붙여 줘요."},
@@ -1581,6 +1584,7 @@ function save(){ if(variant==="S") return; if(!isTemplate()) repo.save(variant,p
 function stopById(id){ for(const d of plan.days){ const k=d.items.findIndex(x=>x.id===id); if(k>=0) return {d,k,it:d.items[k]}; } return null; }
 function daySummary(d){ return d.items.map(it=>({id:it.id,t:it.t,n:it.n})); }
 // ---- 여행 기본정보(M2a): 날짜·숙소 ----
+const AREA_JA={"난바":"なんば","신사이바시":"心斎橋","우메다":"梅田","혼마치":"本町","텐노지":"天王寺","교토":"京都","고베":"神戸"};
 const LODGE_AREAS={"난바":[34.6659,135.5012],"신사이바시":[34.6750,135.5010],"우메다":[34.7024,135.4959],"혼마치":[34.6820,135.5000],"텐노지":[34.6468,135.5137],"교토":[34.9858,135.7588],"고베":[34.6946,135.1958]};
 function lodgingOf(){ const l=plan.trip&&plan.trip.lodging&&plan.trip.lodging[0]; if(l&&isFinite(l.lat)&&isFinite(l.lng)) return l; return {name:HOTEL.n,q:HOTEL.q,lat:HOTEL.lat,lng:HOTEL.lng,area:"난바",isDefault:true}; }
 function parseYMD(v){ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||""))) return null; const d=new Date(v+"T12:00:00"); return isNaN(d)?null:d; }
@@ -1800,7 +1804,7 @@ function render(){
   const fl=t.flights||{}, L0=lodgingOf(), nights=plan.days.length>1?`${plan.days.length-1}박`:"";
   const st=[["여행 날짜",tripDatesLabel()],["숙소",L0.isDefault?`${HOTEL.n} · ${nights||'3박'}`:`${L0.name} · ${L0.area}${nights?' · '+nights:''}`],["항공편",[fl.in&&(fl.in.code+(fl.in.sched?" "+fl.in.sched+"착":"")),fl.out&&(fl.out.code+(fl.out.sched?" "+fl.out.sched+"발":""))].filter(Boolean).join(" / ")||"미정"],["당일치기",macauDay]];
   document.getElementById('status').innerHTML=st.map(([k,v])=>`<div class="stat ${/미정|임시/.test(v)?'todo':''}${custom?' edit':''}"${custom?' role="button" tabindex="0" title="눌러서 여행 정보 수정"':''}><div class="k">${esc(k)}${custom?' <span aria-hidden="true">✎</span>':''}</div><div class="v">${esc(v)}</div></div>`).join('');
-  const tCur=tripSummary(TRIPS.cur); document.getElementById('picker').innerHTML=PLANS.map(p=>`<button type="button" class="pick${p.id===variant?' on':''}" data-id="${p.id}" aria-pressed="${p.id===variant}"><span class="o">${esc(p.id==='U'&&TRIPS.ids.length>1?`내 여행 ${TRIPS.ids.indexOf(TRIPS.cur)+1}/${TRIPS.ids.length}`:p.ord)}</span><span class="n">${esc(p.id==='U'?(tCur.title||p.name):p.name)}</span></button>`).join('');
+  const tCur=tripSummary(TRIPS.cur); document.getElementById('picker').innerHTML=PLANS.map(p=>`<button type="button" class="pick${p.id===variant?' on':''}" data-id="${p.id}" aria-pressed="${p.id===variant}"><span class="o">${esc(p.id==='U'&&TRIPS.ids.length>1?`내 여행 ${TRIPS.ids.indexOf(TRIPS.cur)+1}/${TRIPS.ids.length}`:p.ord)}</span><span class="n">${p.id==='U'?'<span class="star" aria-hidden="true">★</span> ':''}${esc(p.id==='U'?(tCur.title||p.name):p.name)}</span></button>`).join('');
   document.getElementById('pickdesc').innerHTML=(custom?esc(P.desc)+' <button class="linkbtn" type="button" id="tripsOpen">여행 목록 →</button>':esc(P.desc))+(live?'':' <span class="hint">보기 전용이에요.</span> <button class="linkbtn" type="button" id="copyToMine">이 여정을 바탕으로 직접 꾸미기 →</button>');
   document.getElementById('undo').hidden=!custom; document.getElementById('reset').hidden=!custom;
   const isMac=d=>!!farDay(d);
@@ -2206,7 +2210,7 @@ function openTrip(){
   const t=plan.trip, L=t.lodging[0]||{}, f=document.getElementById('tripform');
   f.querySelector('#tTitle').value=plan.title||''; f.querySelector('#tStart').value=t.dates.start||''; f.querySelector('#tEnd').value=t.dates.end||'';
   f.querySelector('#tIn').value=(t.flights.in&&t.flights.in.code)||''; f.querySelector('#tOut').value=(t.flights.out&&t.flights.out.code)||'';
-  f.querySelector('#tLodge').value=L.name||''; const sel=f.querySelector('#tArea'); sel.innerHTML=Object.keys(LODGE_AREAS).map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join(''); sel.value=LODGE_AREAS[L.area]?L.area:"난바";
+  f.querySelector('#tLodge').value=L.name||''; const sel=f.querySelector('#tArea'); sel.innerHTML=Object.keys(LODGE_AREAS).map(a=>`<option value="${esc(a)}">${esc(a)}${AREA_JA[a]?' ('+esc(AREA_JA[a])+')':''}</option>`).join(''); sel.value=LODGE_AREAS[L.area]?L.area:"난바";
   f.querySelector('#tParty').value=(t.party&&t.party.type)||"가족"; updateDaysNote();
   flightInfo={in:null,out:null}; lodgeSel=(L.exact&&L.name)?{name:L.name,q:L.q,lat:L.lat,lng:L.lng}:null; document.getElementById('tLodgeList').hidden=true; const ln=document.getElementById('tLodgeNote'); ln.hidden=!lodgeSel; if(lodgeSel) ln.textContent=`${L.name} · ${L.area} · 지도의 ★ 숙소 핀이 실제 자리에 찍혀 있어요`; paintFlightHint(); loadWD();
   tripsheet.hidden=false; scrim.hidden=false; fab.hidden=true; setTimeout(()=>f.querySelector('#tTitle').focus(),50);
@@ -2387,7 +2391,7 @@ document.getElementById('geoList').onclick=e=>{ const b=e.target.closest('.pl');
   addArea="전체"; document.getElementById('search').value=''; geoReset(); pickPlace(place);
   document.getElementById('selName').textContent='선택: '+place.n+(place.approx?' · 토끼 추정 위치':' · 지도에서 찾음'); document.getElementById('addsheet').querySelector('.sheet-in').scrollTop=0; };
 // 목록에 없는 장소 직접 넣기
-document.getElementById('customToggle').onclick=()=>{ const f=document.getElementById('customForm'); f.hidden=!f.hidden; if(!f.hidden){ const sel=f.querySelector('#cpArea'); sel.innerHTML=Object.keys(LODGE_AREAS).map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join(''); setTimeout(()=>f.querySelector('#cpName').focus(),50); } };
+document.getElementById('customToggle').onclick=()=>{ const f=document.getElementById('customForm'); f.hidden=!f.hidden; if(!f.hidden){ const sel=f.querySelector('#cpArea'); sel.innerHTML=Object.keys(LODGE_AREAS).map(a=>`<option value="${esc(a)}">${esc(a)}${AREA_JA[a]?' ('+esc(AREA_JA[a])+')':''}</option>`).join(''); setTimeout(()=>f.querySelector('#cpName').focus(),50); } };
 document.getElementById('customCancel').onclick=()=>{ document.getElementById('customForm').hidden=true; };
 document.getElementById('customForm').onsubmit=e=>{ e.preventDefault(); const f=e.target, hint=f.querySelector('#cpHint');
   const name=f.querySelector('#cpName').value.trim().slice(0,60); if(!name){ hint.textContent='장소 이름을 적어 주세요'; hint.hidden=false; return; }
@@ -2563,7 +2567,7 @@ try{ const c=JSON.parse(localStorage.getItem(CONN_KEY)||"null"); if(c&&typeof c=
 if(!CONN.custom){ CONN.url=SUZI_DEFAULT.url; CONN.token=SUZI_DEFAULT.token; }
 function saveConn(){ try{ localStorage.setItem(CONN_KEY, JSON.stringify(CONN)); }catch(e){} }
 let BACKEND=null, connOpen=false;
-function setFabLabel(t){ fab.querySelector('.face').nextSibling.textContent=t; }
+function setFabLabel(t){ const faces=fab.querySelectorAll('.face'); faces[faces.length-1].nextSibling.textContent=t; }
 async function connect(){
   BACKEND=null; sample=null; toolsOK=false;
   if(CONN.mode==="auto"){
