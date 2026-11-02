@@ -15,7 +15,7 @@
 - 통화 `CURS=["JPY","KRW"]`, 기본 JPY. 숙소 지역 `LODGE_AREAS` 7개(난바·신사이바시·우메다·혼마치·텐노지·교토·고베), 기본 난바. 동행 기본값 "가족", `trip.party.note`("어른 5 · 아이 2") 보존.
 - 지도: `LANDGEO.kansai`(OSM 해안선, 11개 폴리곤, 89KB, `asia`는 VER 1 그대로), 기본 시점 난바, 전체 지도 fit은 당일치기 지역에 따라 확장, 공항→난바 라피트 동선, 지명 라벨 `PLACES` 간사이.
 - 항공편: 간사이공항은 키 없는 공개 운항 정보 API가 없다(서버 렌더링 HTML, 비브라우저 403). `FLIGHT_API=false`로 "불러오기" 버튼을 숨기고 **공항 운항 현황 페이지 딥링크**(당일)만 표시. Worker `/flights`는 홍콩공항 전용이라 VER 2에서는 쓰지 않는다. 스카이스캐너 링크는 icn/kix.
-- 장소 사전 `data/places-kansai.json`(형식 v2 `[ko,en,ja,lat,lng,kind,pop,cuisine,kosrc]`, 3번째 칸이 일본어), 생성기 `tools/build_places.py`(간사이 5개 bbox). 검색 보조어 `KO_SYN`·동네 `AREA_PTS`·종류 `KIND_WORDS` 간사이판. Nominatim viewbox 134.85,34.15~136.10,35.25, 구글지도 검색어 접미사는 `regionEn()`(Osaka/Kyoto/Nara/Kobe).
+- 장소 사전 `data/places-kansai.json`(형식 v2 `[ko,en,ja,lat,lng,kind,pop,cuisine,kosrc]`, 3번째 칸이 일본어). 2026-11-02 최종본 55,564곳(명소 19.5k·식당 15.9k·동네 8.8k·카페 6.3k·쇼핑 1.9k·교통 1.5k·호텔 1.2k·전망 459·페리 18), 한국어 표기 34.4k(AI 추정 `kosrc:ai` 33k), raw 5.1MB·gzip 1.28MB(GitHub Pages가 gzip 전송). 생성기 `tools/build_places.py`(핵심 bbox 5개 + 광역 bbox 4개 + 린쿠, Overpass 카테고리별 캐시 `tools/places_raw_kansai/`(git 제외) + Wikidata SPARQL 명소 보강(사이트링크 수→pop) + 丁目·잡음 필터 + 토끼(haiku)로 한국어 표기, 상한 35k) → 후처리 `tools/fix_places.py`(체인 상점→쇼핑, `;` 대안 표기 정리, 300m 안 같은 이름 중복 제거, 표기 오류 수동 보정 `KO_FIX`). 재생성 시 두 단계를 순서대로 실행한다. 식당·카페의 한국어 표기는 유명·체인 위주라 나머지는 영문·일본어로 검색된다. 검색 보조어 `KO_SYN`·동네 `AREA_PTS`·종류 `KIND_WORDS` 간사이판. Nominatim viewbox 134.85,34.15~136.10,35.25, 구글지도 검색어 접미사는 `regionEn()`(Osaka/Kyoto/Nara/Kobe).
 - 아이콘: `icons/icon.svg`(소 + 토끼), PNG는 Chrome headless 렌더 + PIL. 헤더에도 `#cow` 심볼이 토끼 옆에 보인다(`.hero .cow`).
 - 추천 여정 A/B/C·운영 정보 `INFO`·`EXTRA`·`HOTEL`은 오사카판으로 교체(`INFO_ASOF` 참고). `PLAN_U`는 날짜·항공편·숙소가 채워진 뼈대.
 
